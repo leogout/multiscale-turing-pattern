@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+#include "StepConfig.h"
 #include "PaintArea.h"
 #include "Color.h"
 
@@ -9,11 +9,10 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QAction>
 
-MainWindow::MainWindow(Scale &scale): m_scale(&scale) {
+StepConfig::StepConfig(Scale &scale): m_scale(&scale) {
   QMap<QString, QObject*> map;
 
   auto layout = new QVBoxLayout;
-  auto scale_label = new QLabel("Scale");
 
   auto small_amounts_layout = new QHBoxLayout;
   auto small_amounts_label = new QLabel("Small amounts");
@@ -60,7 +59,6 @@ MainWindow::MainWindow(Scale &scale): m_scale(&scale) {
   color_layout->addWidget(m_color_g_edit);
   color_layout->addWidget(m_color_b_edit);
 
-  layout->addWidget(scale_label);
   layout->addLayout(small_amounts_layout);
   layout->addLayout(activator_radius_layout);
   layout->addLayout(inhibitor_radius_layout);
