@@ -1,5 +1,4 @@
-#include "ScaleConfig.h"
-#include "PaintArea.h"
+#include "ScaleConfigWidget.h"
 #include "Color.h"
 
 #include <iostream>
@@ -9,9 +8,7 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QAction>
 
-ScaleConfig::ScaleConfig(Scale &scale): m_scale(&scale) {
-  QMap<QString, QObject*> map;
-
+ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   auto layout = new QVBoxLayout;
 
   auto small_amounts_layout = new QHBoxLayout;
@@ -33,7 +30,7 @@ ScaleConfig::ScaleConfig(Scale &scale): m_scale(&scale) {
   m_inhibitor_radius_input->setValue(m_scale->iR);
 
   auto color_layout = new QHBoxLayout;
-  auto color_label = new QLabel("Color:");
+  auto color_label = new QLabel("Color");
   m_color_r_edit = new QSpinBox();
   m_color_g_edit = new QSpinBox();
   m_color_b_edit = new QSpinBox();
