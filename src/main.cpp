@@ -119,13 +119,6 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
   main_grid = std::vector<double>(width * height);
   colors = std::vector<Color>(width * height);
   image = QImage(width, height, QImage::Format_RGB888);
-  scales = {
-      ScaleConfig(width * height, 200, 50, 0.1, Color(237, 255, 143)),
-      ScaleConfig(width * height, 100, 25, 0.08, Color(232, 204, 81)),
-      ScaleConfig(width * height, 50, 10, 0.06, Color(255, 198, 116)),
-      ScaleConfig(width * height, 25, 5, 0.04, Color(232, 133, 98)),
-      ScaleConfig(width * height, 10, 2, 0.02, Color(255, 131, 162)),
-  };
 
   for (double &i : main_grid) {
     i = dist(mt);
@@ -142,9 +135,15 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
 int main(int argc, char *argv[]) {
   std::vector<double> main_grid;
   std::vector<Color> colors;
-  std::vector<ScaleConfig> scales;
   QImage image;
   RenderConfig rc(1, 500, 500);
+  std::vector<ScaleConfig> scales = {
+      ScaleConfig(rc.width * rc.height, 200, 50, 0.1, Color(237, 255, 143)),
+      ScaleConfig(rc.width * rc.height, 100, 25, 0.08, Color(232, 204, 81)),
+      ScaleConfig(rc.width * rc.height, 50, 10, 0.06, Color(255, 198, 116)),
+      ScaleConfig(rc.width * rc.height, 25, 5, 0.04, Color(232, 133, 98)),
+      ScaleConfig(rc.width * rc.height, 10, 2, 0.02, Color(255, 131, 162)),
+  };
 
   init(rc.width, rc.height, image, main_grid, colors, scales);
 
@@ -187,8 +186,9 @@ int main(int argc, char *argv[]) {
   window->setLayout(main_layout);
 
   // Connect
-  int width = 0, height = 0;
+  int width = rc.width, height = rc.height;
   window->connect(render_button, &QPushButton::pressed, [&]{
+      std::cout << (int) scales[0].color.red << std::endl;
       if (width != rc.width || height != rc.height) {
         width = rc.width;
         height = rc.height;

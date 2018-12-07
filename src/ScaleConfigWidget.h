@@ -22,11 +22,9 @@ public:
 private:
     QSlider* m_small_amounts_slider;
     QLabel* m_small_amounts_value;
+    QLabel* m_color_label;
     QSpinBox* m_activator_radius_input;
     QSpinBox* m_inhibitor_radius_input;
-    QSpinBox* m_color_r_edit;
-    QSpinBox* m_color_g_edit;
-    QSpinBox* m_color_b_edit;
 };
 
 
