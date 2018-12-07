@@ -33,7 +33,7 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
 
   auto color_layout = new QHBoxLayout;
   auto color_button = new QPushButton("Select color");
-  m_color_label = new QLabel("Color");
+  m_color_label = new QLabel("Color <span style=\"background-color:" + scale.color.name() + "; color:" + scale.color.name() + ";\">.....</span>");
 
   small_amounts_layout->addWidget(small_amounts_label);
   small_amounts_layout->addWidget(m_small_amounts_slider);
@@ -68,12 +68,9 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   });
   connect(color_button, &QPushButton::pressed, [this]{
       QColor col = QColorDialog::getColor(Qt::white, this, "Select scale color");
-      std::cout << (int) m_scale->color.red << std::endl;
-      QString color = "<span style=\"background-color:" + col.name() + "; color:" + col.name() + ";\">.....</span>";
-      m_color_label->setText(color);
-      m_scale->color.red = static_cast<Color::byte>(col.red());
-      m_scale->color.green = static_cast<Color::byte>(col.green());
-      m_scale->color.blue = static_cast<Color::byte>(col.blue());
-      std::cout << (int) m_scale->color.red << std::endl;
+      std::cout << m_scale->color.red() << std::endl;
+      m_color_label->setText("Color <span style=\"background-color:" + col.name() + "; color:" + col.name() + ";\">.....</span>");
+      m_scale->color = col;
+      std::cout << m_scale->color.red() << std::endl;
   });
 }

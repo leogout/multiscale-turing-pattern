@@ -53,7 +53,23 @@ void blur(std::vector<double> &src, std::vector<double> &dest, std::vector<doubl
   blur_v(buffer, dest, r, w, h);
 }
 
-void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<Color> &colors, std::vector<ScaleConfig> &scales, QImage &image) {
+void multiply(QColor &color, double factor) {
+  color.setRgb(
+      static_cast<int>(color.red() * factor),
+      static_cast<int>(color.green() * factor),
+      static_cast<int>(color.blue() * factor)
+  );
+}
+
+void bump_to(QColor &from, QColor &to, double amount) {
+  from.setRgb(
+      static_cast<int>(from.red() * (1 - amount) + to.red() * amount),
+      static_cast<int>(from.green() * (1 - amount) + to.green() * amount),
+      static_cast<int>(from.blue() * (1 - amount) + to.blue() * amount)
+  );
+}
+
+void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scales, QImage &image) {
   int width = rc.width;
   int height = rc.height;
   std::vector<double> buffer(width * height);
@@ -90,7 +106,7 @@ void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<Colo
         factor = -scales[best_scale].sa;
       }
 
-      colors[i].bump_to(scales[best_scale].color, 0.1);
+      bump_to(colors[i], scales[best_scale].color, 0.3);
       main_grid[i] += factor;
 
       max = std::max(max, main_grid[i]);
@@ -105,19 +121,20 @@ void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<Colo
 
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
-      Color col = colors[i + j * width] * ((main_grid[i + j * width] + 1) / 2);
-      image.setPixel(i, j, qRgb(col.red, col.green, col.blue));
+      int idx = i + j * width;
+      multiply(colors[idx], (main_grid[idx] + 1) / 2);
+      image.setPixel(i, j, colors[idx].rgb());
     }
   }
 }
 
-void init(int width, int height, QImage &image, std::vector<double> &main_grid, std::vector<Color> &colors, std::vector<ScaleConfig> &scales) {
+void init(int width, int height, QImage &image, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scales) {
   std::random_device rd;
   std::mt19937 mt(1234);
   std::uniform_real_distribution<double> dist(-1, 1);
 
   main_grid = std::vector<double>(width * height);
-  colors = std::vector<Color>(width * height);
+  colors = std::vector<QColor>(width * height);
   image = QImage(width, height, QImage::Format_RGB888);
 
   for (double &i : main_grid) {
@@ -127,6 +144,7 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
       int color = static_cast<int>((main_grid[i + j * width] + 1) / 2 * 255);
+      //colors[i + j * width] = QColor(0, 0, 0);
       image.setPixel(i, j, qRgb(color, color, color));
     }
   }
@@ -134,15 +152,15 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
 
 int main(int argc, char *argv[]) {
   std::vector<double> main_grid;
-  std::vector<Color> colors;
+  std::vector<QColor> colors;
   QImage image;
   RenderConfig rc(1, 500, 500);
   std::vector<ScaleConfig> scales = {
-      ScaleConfig(rc.width * rc.height, 200, 50, 0.1, Color(237, 255, 143)),
-      ScaleConfig(rc.width * rc.height, 100, 25, 0.08, Color(232, 204, 81)),
-      ScaleConfig(rc.width * rc.height, 50, 10, 0.06, Color(255, 198, 116)),
-      ScaleConfig(rc.width * rc.height, 25, 5, 0.04, Color(232, 133, 98)),
-      ScaleConfig(rc.width * rc.height, 10, 2, 0.02, Color(255, 131, 162)),
+      ScaleConfig(rc.width * rc.height, 200, 50, 0.1, QColor(255, 255, 255)),
+      ScaleConfig(rc.width * rc.height, 100, 25, 0.08, QColor(255, 255, 255)),
+      ScaleConfig(rc.width * rc.height, 50, 10, 0.06, QColor(255, 255, 255)),
+      ScaleConfig(rc.width * rc.height, 25, 5, 0.04, QColor(255, 255, 255)),
+      ScaleConfig(rc.width * rc.height, 10, 2, 0.02, QColor(255, 255, 255)),
   };
 
   init(rc.width, rc.height, image, main_grid, colors, scales);
@@ -188,7 +206,6 @@ int main(int argc, char *argv[]) {
   // Connect
   int width = rc.width, height = rc.height;
   window->connect(render_button, &QPushButton::pressed, [&]{
-      std::cout << (int) scales[0].color.red << std::endl;
       if (width != rc.width || height != rc.height) {
         width = rc.width;
         height = rc.height;

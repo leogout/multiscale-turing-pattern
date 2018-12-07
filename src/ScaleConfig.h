@@ -16,10 +16,10 @@ public:
     int aR;
     int iR;
     double sa;
-    Color color;
+    QColor color;
 
-    ScaleConfig(){};
-    ScaleConfig(unsigned long size, int aR, int iR, double sa, Color color):
+    ScaleConfig() = default;
+    ScaleConfig(unsigned long size, int aR, int iR, double sa, QColor color):
         aR(aR),
         iR(iR),
         sa(sa),
