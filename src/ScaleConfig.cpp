@@ -1,4 +1,4 @@
-#include "StepConfig.h"
+#include "ScaleConfig.h"
 #include "PaintArea.h"
 #include "Color.h"
 
@@ -9,31 +9,31 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QAction>
 
-StepConfig::StepConfig(Scale &scale): m_scale(&scale) {
+ScaleConfig::ScaleConfig(Scale &scale): m_scale(&scale) {
   QMap<QString, QObject*> map;
 
   auto layout = new QVBoxLayout;
 
   auto small_amounts_layout = new QHBoxLayout;
-  auto small_amounts_label = new QLabel("Small amounts");
+  auto small_amounts_label = new QLabel("Small amounts:");
   m_small_amounts_slider = new QSlider(Qt::Orientation::Horizontal);
   m_small_amounts_slider->setValue(static_cast<int>(m_scale->sa * 100));
   m_small_amounts_value = new QLabel(QString::number(m_scale->sa, 'f', 2));
 
   auto activator_radius_layout = new QHBoxLayout;
-  auto activator_radius_label = new QLabel("Activator radius");
+  auto activator_radius_label = new QLabel("Activator radius:");
   m_activator_radius_input = new QSpinBox;
   m_activator_radius_input->setMaximum(500);
   m_activator_radius_input->setValue(m_scale->aR);
 
   auto inhibitor_radius_layout = new QHBoxLayout;
-  auto inhibitor_radius_label = new QLabel("Inhibitor radius");
+  auto inhibitor_radius_label = new QLabel("Inhibitor radius:");
   m_inhibitor_radius_input = new QSpinBox;
   m_inhibitor_radius_input->setMaximum(500);
   m_inhibitor_radius_input->setValue(m_scale->iR);
 
   auto color_layout = new QHBoxLayout;
-  auto color_label = new QLabel("Color");
+  auto color_label = new QLabel("Color:");
   m_color_r_edit = new QSpinBox();
   m_color_g_edit = new QSpinBox();
   m_color_b_edit = new QSpinBox();
@@ -65,9 +65,6 @@ StepConfig::StepConfig(Scale &scale): m_scale(&scale) {
   layout->addLayout(color_layout);
 
   setLayout(layout);
-
-  setWindowTitle("Multi Scale Turing Pattern");
-  setWindowIcon(QIcon(":/icon.png"));
 
   connect(m_small_amounts_slider, &QSlider::valueChanged, [this]{
       double value = (m_small_amounts_slider->value() + 1) / 100.0;

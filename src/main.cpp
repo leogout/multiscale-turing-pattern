@@ -11,7 +11,8 @@
 #include <QFileInfo>
 
 #include "PaintArea.h"
-#include "StepConfig.h"
+#include "ScaleConfig.h"
+#include "RenderConfig.h"
 
 int circular_index(int i, int j, int w, int h) {
   return (w + i) % w + ((h + j) % h) * w;
@@ -52,11 +53,13 @@ void blur(std::vector<double> &src, std::vector<double> &dest, std::vector<doubl
   blur_v(buffer, dest, r, w, h);
 }
 
-void generate(int width, int height, std::vector<double> &main_grid, std::vector<Color> &colors, std::vector<Scale> &scales, QImage &image) {
+void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<Color> &colors, std::vector<Scale> &scales, QImage &image) {
+  int width = rc.width;
+  int height = rc.height;
   std::vector<double> buffer(width * height);
 
-  //for (int passes = 0; passes < PASSES; ++passes) {
-  //  std::cout << "Pass " << passes << std::endl;
+  for (int pass = 0; pass < rc.passes; ++pass) {
+    std::cout << "Pass " << pass << std::endl;
     for (Scale &scale : scales) {
       blur(main_grid, scale.activator, buffer, scale.aR, width, height);
       blur(main_grid, scale.inhibitor, buffer, scale.iR, width, height);
@@ -98,7 +101,7 @@ void generate(int width, int height, std::vector<double> &main_grid, std::vector
     for (double &i : main_grid) {
       i = (i - min) / (max - min) * 2 - 1;
     }
-  //}
+  }
 
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
@@ -119,11 +122,11 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
   colors = std::vector<Color>(width * height);
   image = QImage(width, height, QImage::Format_RGB888);
   scales = {
-      Scale(width * height, 200, 50, 0.05, Color(0, 150, 20)),
-      Scale(width * height, 100, 25, 0.04, Color(40, 180, 70)),
-      Scale(width * height, 50, 10, 0.03, Color(150, 200, 30)),
-      Scale(width * height, 25, 5, 0.02, Color(100, 100, 255)),
-      Scale(width * height, 10, 2, 0.01, Color(200, 50, 50)),
+      Scale(width * height, 200, 50, 0.5, Color(237, 255, 143)),
+      Scale(width * height, 100, 25, 0.4, Color(232, 204, 81)),
+      Scale(width * height, 50, 10, 0.3, Color(255, 198, 116)),
+      Scale(width * height, 25, 5, 0.2, Color(232, 133, 98)),
+      Scale(width * height, 10, 2, 0.1, Color(255, 131, 162)),
   };
 
   for (double &i : main_grid) {
@@ -139,34 +142,45 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
 }
 
 int main(int argc, char *argv[]) {
-  int WIDTH = 500;
-  int HEIGHT = 500;
+
   std::vector<double> main_grid;
   std::vector<Color> colors;
   std::vector<Scale> scales;
   QImage image;
+  RenderConfig rc(1, 500, 500);
 
   QApplication app(argc, argv);
 
-  QWidget *window = new QWidget;
+  auto window = new QWidget;
+  window->setWindowTitle("Multi-scale Turing pattern");
+  window->setWindowIcon(QIcon(":/icon.png"));
 
-  init(WIDTH, HEIGHT, image, main_grid, colors, scales);
+  init(rc.width, rc.height, image, main_grid, colors, scales);
+
+  auto renderconfig_layout = new QVBoxLayout;
 
   auto width_input = new QSpinBox;
-  width_input->setMaximum(1920);
-  width_input->setValue(WIDTH);
+  width_input->setMaximum(10000);
+  width_input->setValue(rc.width);
 
   auto height_input = new QSpinBox;
-  height_input->setMaximum(1080);
-  height_input->setValue(HEIGHT);
+  height_input->setMaximum(10000);
+  height_input->setValue(rc.height);
 
-  auto size_button = new QPushButton("Update");
+  auto size_label = new QLabel("Size:");
 
-  auto save_input = new QLineEdit("../out/filename.png");
+  auto pass_input = new QSpinBox;
+  pass_input->setMaximum(1000);
+  pass_input->setValue(1);
+
+  auto pass_label = new QLabel("Passes:");
+
   auto save_button = new QPushButton("Save");
+  auto reset_button = new QPushButton("Reset");
   auto render_button = new QPushButton("Render");
   auto image_zone = new QLabel;
 
+  auto pass_layout = new QHBoxLayout;
   auto size_layout = new QHBoxLayout;
   auto save_layout = new QHBoxLayout;
   auto main_layout = new QHBoxLayout;
@@ -174,43 +188,63 @@ int main(int argc, char *argv[]) {
 
   auto scale_tabs = new QTabWidget;
   scale_tabs->setFixedWidth(400);
-  scale_tabs->setFixedHeight(200);
+  //scale_tabs->setFixedHeight(200);
 
-  int i = 1;
-  for (auto &scale: scales) {
-    scale_tabs->addTab(new StepConfig(scale), "Scale " + QString::number(i));
-    i++;
+  for (int i = 0; i < scales.size(); ++i) {
+    scale_tabs->addTab(new ScaleConfig(scales[i]), "Scale " + QString::number(i + 1));
   }
+
   config_layout->addWidget(scale_tabs);
 
   image_zone->setPixmap(QPixmap::fromImage(image));
 
+  pass_layout->addWidget(pass_label);
+  pass_layout->addWidget(pass_input);
+  renderconfig_layout->addLayout(pass_layout);
+
+  size_layout->addWidget(size_label);
   size_layout->addWidget(width_input);
   size_layout->addWidget(height_input);
-  size_layout->addWidget(size_button);
-  config_layout->addLayout(size_layout);
+  renderconfig_layout->addLayout(size_layout);
 
-  save_layout->addWidget(save_input);
   save_layout->addWidget(save_button);
-  config_layout->addLayout(save_layout);
-  config_layout->addWidget(render_button);
+  renderconfig_layout->addLayout(save_layout);
+  renderconfig_layout->addWidget(reset_button);
+  renderconfig_layout->addWidget(render_button);
+  config_layout->addLayout(renderconfig_layout);
   main_layout->addLayout(config_layout);
   main_layout->addWidget(image_zone);
   window->setLayout(main_layout);
 
   // Connect
-  window->connect(render_button, &QPushButton::pressed, [WIDTH, HEIGHT, &width_input, &height_input, &main_grid, &colors, &scales, &image, &image_zone]{
-      generate(width_input->value(), height_input->value(), main_grid, colors, scales, image);
+  window->connect(render_button, &QPushButton::pressed, [&]{
+      int input_w = width_input->value();
+      int input_h = height_input->value();
+      int input_p = pass_input->value();
 
-      image_zone->setPixmap(QPixmap::fromImage(image.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio)));
+      if (input_w != rc.width || input_h != rc.height) {
+        rc.width = input_w;
+        rc.height = input_h;
+
+        init(rc.width, rc.height, image, main_grid, colors, scales);
+      }
+
+      if (input_p != rc.passes) {
+        rc.passes = input_p;
+      }
+
+      generate(rc, main_grid, colors, scales, image);
+      image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
   });
 
-  window->connect(save_button, &QPushButton::pressed, [&image, &save_input]{
-      image.save(save_input->text(), "png");
+  window->connect(reset_button, &QPushButton::pressed, [&]{
+      init(rc.width, rc.height, image, main_grid, colors, scales);
+      image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
   });
 
-  window->connect(size_button, &QPushButton::pressed, [&main_grid, &colors, &image, &scales, &width_input, &height_input]{
-      init(width_input->value(), height_input->value(), image, main_grid, colors, scales);
+  window->connect(save_button, &QPushButton::pressed, [&window, &image]{
+      QString file = QFileDialog::getSaveFileName(window, "Save image", ".", "PNG file (*.png)");
+      image.save(file, "png");
   });
 
   window->show();

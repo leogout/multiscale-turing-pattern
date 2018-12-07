@@ -12,7 +12,7 @@ set(RESOURCE_FOLDER res)
 set(RESOURCE_FILES ${RESOURCE_FOLDER}/resources.qrc)
 set(PROJECT_SOURCE_DIR src/)
 
-set(SOURCE_FILES src/main.cpp src/PaintArea.cpp src/PaintArea.h src/StepConfig.cpp src/StepConfig.h src/Scale.h src/Color.h)
+set(SOURCE_FILES src/main.cpp src/PaintArea.cpp src/PaintArea.h src/ScaleConfig.cpp src/ScaleConfig.h src/Scale.h src/Color.h src/RenderConfig.cpp src/RenderConfig.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${RESOURCE_FILES})
 

@@ -14,12 +14,12 @@
 #include "PaintArea.h"
 #include "Scale.h"
 
-class StepConfig : public QWidget
+class ScaleConfig : public QWidget
 {
 Q_OBJECT
 public:
     Scale *m_scale;
-    explicit StepConfig(Scale &scale);
+    explicit ScaleConfig(Scale &scale);
 private:
     QSlider* m_small_amounts_slider;
     QLabel* m_small_amounts_value;
