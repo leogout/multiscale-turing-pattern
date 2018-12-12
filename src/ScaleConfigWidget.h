@@ -19,12 +19,15 @@ Q_OBJECT
 public:
     ScaleConfig *m_scale;
     explicit ScaleConfigWidget(ScaleConfig &scale);
+    ScaleConfig getScaleConfig();
 private:
+    QColor m_color;
     QSlider* m_small_amounts_slider;
     QLabel* m_small_amounts_value;
     QLabel* m_color_label;
     QSpinBox* m_activator_radius_input;
     QSpinBox* m_inhibitor_radius_input;
+    QPushButton* m_color_button;
 };
 
 

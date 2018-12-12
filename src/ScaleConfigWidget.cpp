@@ -1,5 +1,4 @@
 #include "ScaleConfigWidget.h"
-#include "Color.h"
 
 #include <iostream>
 #include <QtWidgets/QHBoxLayout>
@@ -16,6 +15,7 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   auto small_amounts_layout = new QHBoxLayout;
   auto small_amounts_label = new QLabel("Small amounts:");
   m_small_amounts_slider = new QSlider(Qt::Orientation::Horizontal);
+  m_small_amounts_slider->setMaximum(30);
   m_small_amounts_slider->setValue(static_cast<int>(m_scale->sa * 100));
   m_small_amounts_value = new QLabel(QString::number(m_scale->sa, 'f', 2));
 
@@ -32,7 +32,7 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   m_inhibitor_radius_input->setValue(m_scale->iR);
 
   auto color_layout = new QHBoxLayout;
-  auto color_button = new QPushButton("Select color");
+  m_color_button = new QPushButton("Select color");
   m_color_label = new QLabel("Color <span style=\"background-color:" + scale.color.name() + "; color:" + scale.color.name() + ";\">.....</span>");
 
   small_amounts_layout->addWidget(small_amounts_label);
@@ -46,7 +46,7 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   inhibitor_radius_layout->addWidget(m_inhibitor_radius_input);
 
   color_layout->addWidget(m_color_label);
-  color_layout->addWidget(color_button);
+  color_layout->addWidget(m_color_button);
 
   layout->addLayout(small_amounts_layout);
   layout->addLayout(activator_radius_layout);
@@ -66,11 +66,17 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   connect(m_inhibitor_radius_input, qOverload<int>(&QSpinBox::valueChanged), [this]{
       m_scale->iR = m_inhibitor_radius_input->value();
   });
-  connect(color_button, &QPushButton::pressed, [this]{
-      QColor col = QColorDialog::getColor(Qt::white, this, "Select scale color");
-      std::cout << m_scale->color.red() << std::endl;
-      m_color_label->setText("Color <span style=\"background-color:" + col.name() + "; color:" + col.name() + ";\">.....</span>");
-      m_scale->color = col;
-      std::cout << m_scale->color.red() << std::endl;
+  connect(m_color_button, &QPushButton::pressed, [this]{
+      m_color = QColorDialog::getColor(Qt::white, this, "Select scale color");
+      m_color_label->setText("Color <span style=\"background-color:" + m_color.name() + "; color:" + m_color.name() + ";\">.....</span>");
   });
+}
+
+ScaleConfig ScaleConfigWidget::getScaleConfig() {
+  return ScaleConfig(
+      m_activator_radius_input->value(),
+      m_inhibitor_radius_input->value(),
+      m_small_amounts_slider->value(),
+      m_color
+  );
 }

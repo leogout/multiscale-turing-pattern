@@ -10,9 +10,11 @@
 #include <QTextStream>
 #include <QFileInfo>
 
+#include "Scale.h"
 #include "ScaleConfigWidget.h"
 #include "RenderConfig.h"
 #include "RenderConfigWidget.h"
+#include "ScaleConfig.h"
 
 int circular_index(int i, int j, int w, int h) {
   return (w + i) % w + ((h + j) % h) * w;
@@ -69,20 +71,20 @@ void bump_to(QColor &from, QColor &to, double amount) {
   );
 }
 
-void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scales, QImage &image) {
+void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scalesConfig, std::vector<Scale> &scales, QImage &image) {
   int width = rc.width;
   int height = rc.height;
   std::vector<double> buffer(width * height);
 
   for (int pass = 0; pass < rc.passes; ++pass) {
     std::cout << "Pass " << pass << std::endl;
-    for (ScaleConfig &scale : scales) {
-      blur(main_grid, scale.activator, buffer, scale.aR, width, height);
-      blur(main_grid, scale.inhibitor, buffer, scale.iR, width, height);
+    for (int scale = 0; scale < scales.size(); ++scale) {
+      blur(main_grid, scales[scale].activator, buffer, scalesConfig[scale].aR, width, height);
+      blur(main_grid, scales[scale].inhibitor, buffer, scalesConfig[scale].iR, width, height);
 
       for (int i = 0; i < main_grid.size(); ++i) {
-        scale.variation[i] = fabs(
-            scale.activator[i] - scale.inhibitor[i]
+        scales[scale].variation[i] = fabs(
+            scales[scale].activator[i] - scales[scale].inhibitor[i]
         );
       }
     }
@@ -101,12 +103,12 @@ void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QCol
       double factor;
 
       if (scales[best_scale].activator[i] > scales[best_scale].inhibitor[i]) {
-        factor = scales[best_scale].sa;
+        factor = scalesConfig[best_scale].sa;
       } else {
-        factor = -scales[best_scale].sa;
+        factor = -scalesConfig[best_scale].sa;
       }
 
-      bump_to(colors[i], scales[best_scale].color, 0.3);
+      bump_to(colors[i], scalesConfig[best_scale].color, 0.3);
       main_grid[i] += factor;
 
       max = std::max(max, main_grid[i]);
@@ -128,14 +130,22 @@ void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QCol
   }
 }
 
-void init(int width, int height, QImage &image, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scales) {
+void init(RenderConfig rc, QImage &image, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<Scale> &scales) {
   std::random_device rd;
-  std::mt19937 mt(1234);
+  std::mt19937 mt(5621);
   std::uniform_real_distribution<double> dist(-1, 1);
+  int width = rc.width;
+  int height = rc.height;
+  unsigned long size = static_cast<unsigned long>(width * height);
 
   main_grid = std::vector<double>(width * height);
   colors = std::vector<QColor>(width * height);
+  scales = std::vector<Scale>(5);
   image = QImage(width, height, QImage::Format_RGB888);
+
+  for (int i = 0; i < 5; ++i) {
+    scales[i] = Scale(size);
+  }
 
   for (double &i : main_grid) {
     i = dist(mt);
@@ -144,7 +154,6 @@ void init(int width, int height, QImage &image, std::vector<double> &main_grid, 
   for (int i = 0; i < width; ++i) {
     for (int j = 0; j < height; ++j) {
       int color = static_cast<int>((main_grid[i + j * width] + 1) / 2 * 255);
-      //colors[i + j * width] = QColor(0, 0, 0);
       image.setPixel(i, j, qRgb(color, color, color));
     }
   }
@@ -155,15 +164,18 @@ int main(int argc, char *argv[]) {
   std::vector<QColor> colors;
   QImage image;
   RenderConfig rc(1, 500, 500);
-  std::vector<ScaleConfig> scales = {
-      ScaleConfig(rc.width * rc.height, 200, 50, 0.1, QColor(255, 255, 255)),
-      ScaleConfig(rc.width * rc.height, 100, 25, 0.08, QColor(255, 255, 255)),
-      ScaleConfig(rc.width * rc.height, 50, 10, 0.06, QColor(255, 255, 255)),
-      ScaleConfig(rc.width * rc.height, 25, 5, 0.04, QColor(255, 255, 255)),
-      ScaleConfig(rc.width * rc.height, 10, 2, 0.02, QColor(255, 255, 255)),
+  std::vector<Scale> scales;
+  std::vector<ScaleConfig> scalesConfig;
+
+  scalesConfig = {
+      ScaleConfig(100, 200, 0.05, QColor(237, 255, 143)),
+      ScaleConfig(20, 40, 0.04, QColor(232, 204, 81)),
+      ScaleConfig(10, 20, 0.03, QColor(255, 198, 116)),
+      ScaleConfig(5, 10, 0.02, QColor(232, 133, 98)),
+      ScaleConfig(1, 2, 0.01, QColor(255, 131, 162)),
   };
 
-  init(rc.width, rc.height, image, main_grid, colors, scales);
+  init(rc, image, main_grid, colors, scales);
 
   QApplication app(argc, argv);
 
@@ -174,7 +186,6 @@ int main(int argc, char *argv[]) {
 
   // Buttons
   auto save_button = new QPushButton("Save");
-  auto reset_button = new QPushButton("Reset");
   auto render_button = new QPushButton("Render");
 
   // Image
@@ -183,17 +194,15 @@ int main(int argc, char *argv[]) {
 
   // Custom widgets
   auto render_config = new RenderConfigWidget(rc);
-  auto scale_tabs = new QTabWidget;
-  scale_tabs->setFixedWidth(400);
-  for (int i = 0; i < scales.size(); ++i) {
-    scale_tabs->addTab(new ScaleConfigWidget(scales[i]), "Scale " + QString::number(i + 1));
-  }
 
   // Layouts
   auto main_layout = new QHBoxLayout;
   auto config_layout = new QVBoxLayout;
 
-  config_layout->addWidget(scale_tabs);
+  for (int i = 0; i < scales.size(); ++i) {
+    config_layout->addWidget(new ScaleConfigWidget(scalesConfig[i]));
+  }
+
   config_layout->addWidget(render_config);
   config_layout->addWidget(render_button);
   config_layout->addWidget(save_button);
@@ -204,21 +213,9 @@ int main(int argc, char *argv[]) {
   window->setLayout(main_layout);
 
   // Connect
-  int width = rc.width, height = rc.height;
   window->connect(render_button, &QPushButton::pressed, [&]{
-      if (width != rc.width || height != rc.height) {
-        width = rc.width;
-        height = rc.height;
-
-        init(rc.width, rc.height, image, main_grid, colors, scales);
-      }
-
-      generate(rc, main_grid, colors, scales, image);
-      image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
-  });
-
-  window->connect(reset_button, &QPushButton::pressed, [&]{
-      init(rc.width, rc.height, image, main_grid, colors, scales);
+      init(rc, image, main_grid, colors, scales);
+      generate(rc, main_grid, colors, scalesConfig, scales, image);
       image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
   });
 

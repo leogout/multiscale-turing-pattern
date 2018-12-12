@@ -12,7 +12,15 @@ set(RESOURCE_FOLDER res)
 set(RESOURCE_FILES ${RESOURCE_FOLDER}/resources.qrc)
 set(PROJECT_SOURCE_DIR src/)
 
-set(SOURCE_FILES src/main.cpp src/ScaleConfigWidget.cpp src/ScaleConfigWidget.h src/ScaleConfig.h src/Color.h src/RenderConfig.h src/RenderConfigWidget.cpp src/RenderConfigWidget.h)
+set(SOURCE_FILES
+        src/main.cpp
+        src/ScaleConfigWidget.cpp
+        src/ScaleConfigWidget.h
+        src/ScaleConfig.h
+        src/Scale.h
+        src/RenderConfig.h
+        src/RenderConfigWidget.cpp
+        src/RenderConfigWidget.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${RESOURCE_FILES})
 
