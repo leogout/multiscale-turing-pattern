@@ -9,11 +9,12 @@
 #include <QApplication>
 #include <QTextStream>
 #include <QFileInfo>
+#include <src/view/ScalesConfig.h>
 
 #include "Scale.h"
-#include "ScaleConfigWidget.h"
+#include "src/view/ScaleConfigWidget.h"
 #include "RenderConfig.h"
-#include "RenderConfigWidget.h"
+#include "src/view/RenderConfigWidget.h"
 #include "ScaleConfig.h"
 
 int circular_index(int i, int j, int w, int h) {
@@ -71,7 +72,7 @@ void bump_to(QColor &from, QColor &to, double amount) {
   );
 }
 
-void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> &scalesConfig, std::vector<Scale> &scales, QImage &image) {
+void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> scalesConfig, std::vector<Scale> &scales, QImage &image) {
   int width = rc.width;
   int height = rc.height;
   std::vector<double> buffer(width * height);
@@ -194,15 +195,13 @@ int main(int argc, char *argv[]) {
 
   // Custom widgets
   auto render_config = new RenderConfigWidget(rc);
+  auto scales_config = new ScalesConfig(scalesConfig);
 
   // Layouts
   auto main_layout = new QHBoxLayout;
   auto config_layout = new QVBoxLayout;
 
-  for (int i = 0; i < scales.size(); ++i) {
-    config_layout->addWidget(new ScaleConfigWidget(scalesConfig[i]));
-  }
-
+  config_layout->addWidget(scales_config);
   config_layout->addWidget(render_config);
   config_layout->addWidget(render_button);
   config_layout->addWidget(save_button);
@@ -215,7 +214,7 @@ int main(int argc, char *argv[]) {
   // Connect
   window->connect(render_button, &QPushButton::pressed, [&]{
       init(rc, image, main_grid, colors, scales);
-      generate(rc, main_grid, colors, scalesConfig, scales, image);
+      generate(rc, main_grid, colors, scales_config->getConfig(), scales, image);
       image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
   });
 

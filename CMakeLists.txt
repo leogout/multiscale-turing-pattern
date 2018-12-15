@@ -14,13 +14,13 @@ set(PROJECT_SOURCE_DIR src/)
 
 set(SOURCE_FILES
         src/main.cpp
-        src/ScaleConfigWidget.cpp
-        src/ScaleConfigWidget.h
+        src/view/ScaleConfigWidget.cpp
+        src/view/ScaleConfigWidget.h
         src/ScaleConfig.h
         src/Scale.h
         src/RenderConfig.h
-        src/RenderConfigWidget.cpp
-        src/RenderConfigWidget.h)
+        src/view/RenderConfigWidget.cpp
+        src/view/RenderConfigWidget.h src/view/ScalesConfig.cpp src/view/ScalesConfig.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${RESOURCE_FILES})
 

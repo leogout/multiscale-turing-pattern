@@ -8,7 +8,7 @@
 
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QSpinBox>
-#include "RenderConfig.h"
+#include "src/RenderConfig.h"
 
 class RenderConfigWidget : public QWidget
 {

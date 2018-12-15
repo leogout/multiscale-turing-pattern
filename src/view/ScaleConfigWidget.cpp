@@ -15,7 +15,7 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   auto small_amounts_layout = new QHBoxLayout;
   auto small_amounts_label = new QLabel("Small amounts:");
   m_small_amounts_slider = new QSlider(Qt::Orientation::Horizontal);
-  m_small_amounts_slider->setMaximum(30);
+  m_small_amounts_slider->setMaximum(10);
   m_small_amounts_slider->setValue(static_cast<int>(m_scale->sa * 100));
   m_small_amounts_value = new QLabel(QString::number(m_scale->sa, 'f', 2));
 
@@ -72,7 +72,14 @@ ScaleConfigWidget::ScaleConfigWidget(ScaleConfig &scale): m_scale(&scale) {
   });
 }
 
-ScaleConfig ScaleConfigWidget::getScaleConfig() {
+void ScaleConfigWidget::setConfig(ScaleConfig config) {
+  m_activator_radius_input->setValue(config.aR);
+  m_inhibitor_radius_input->setValue(config.iR);
+  m_small_amounts_slider->setValue(static_cast<int>(config.sa * 100));
+  m_color = config.color;
+}
+
+ScaleConfig ScaleConfigWidget::getConfig() {
   return ScaleConfig(
       m_activator_radius_input->value(),
       m_inhibitor_radius_input->value(),

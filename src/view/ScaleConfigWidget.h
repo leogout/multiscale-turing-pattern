@@ -11,7 +11,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
-#include "ScaleConfig.h"
+#include <src/ScaleConfig.h>
 
 class ScaleConfigWidget : public QWidget
 {
@@ -19,7 +19,8 @@ Q_OBJECT
 public:
     ScaleConfig *m_scale;
     explicit ScaleConfigWidget(ScaleConfig &scale);
-    ScaleConfig getScaleConfig();
+    void setConfig(ScaleConfig config);
+    ScaleConfig getConfig();
 private:
     QColor m_color;
     QSlider* m_small_amounts_slider;
