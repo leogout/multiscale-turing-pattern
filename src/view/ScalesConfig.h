@@ -17,7 +17,7 @@ public:
     std::vector<ScaleConfigWidget*> m_scales_config;
 
     explicit ScalesConfig(std::vector<ScaleConfig> &config);
-    void setConfig(std::vector<ScaleConfig> scalesConfig);
+    void setConfig(std::vector<ScaleConfig> &scalesConfig);
     std::vector<ScaleConfig> getConfig();
 };
 

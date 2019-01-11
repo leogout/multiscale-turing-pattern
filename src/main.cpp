@@ -72,7 +72,7 @@ void bump_to(QColor &from, QColor &to, double amount) {
   );
 }
 
-void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> scalesConfig, std::vector<Scale> &scales, QImage &image) {
+void generate(RenderConfig rc, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<ScaleConfig> scalesConfig, std::vector<Scale> &scales, QImage &image) {
   int width = rc.width;
   int height = rc.height;
   std::vector<double> buffer(width * height);
@@ -131,16 +131,14 @@ void generate(RenderConfig &rc, std::vector<double> &main_grid, std::vector<QCol
   }
 }
 
-void init(RenderConfig rc, QImage &image, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<Scale> &scales) {
-  std::random_device rd;
-  std::mt19937 mt(5621);
+void init(std::mt19937 &mt, RenderConfig rc, QImage &image, std::vector<double> &main_grid, std::vector<QColor> &colors, std::vector<Scale> &scales) {
   std::uniform_real_distribution<double> dist(-1, 1);
   int width = rc.width;
   int height = rc.height;
-  unsigned long size = static_cast<unsigned long>(width * height);
+  int size = width * height;
 
-  main_grid = std::vector<double>(width * height);
-  colors = std::vector<QColor>(width * height);
+  main_grid = std::vector<double>(size);
+  colors = std::vector<QColor>(size);
   scales = std::vector<Scale>(5);
   image = QImage(width, height, QImage::Format_RGB888);
 
@@ -161,22 +159,22 @@ void init(RenderConfig rc, QImage &image, std::vector<double> &main_grid, std::v
 }
 
 int main(int argc, char *argv[]) {
+  std::mt19937 mt;
+
   std::vector<double> main_grid;
   std::vector<QColor> colors;
-  QImage image;
-  RenderConfig rc(1, 500, 500);
   std::vector<Scale> scales;
-  std::vector<ScaleConfig> scalesConfig;
-
-  scalesConfig = {
+  std::vector<ScaleConfig> scalesConfig = {
       ScaleConfig(100, 200, 0.05, QColor(237, 255, 143)),
       ScaleConfig(20, 40, 0.04, QColor(232, 204, 81)),
       ScaleConfig(10, 20, 0.03, QColor(255, 198, 116)),
       ScaleConfig(5, 10, 0.02, QColor(232, 133, 98)),
       ScaleConfig(1, 2, 0.01, QColor(255, 131, 162)),
   };
+  RenderConfig rc(10, 500, 500);
+  QImage image;
 
-  init(rc, image, main_grid, colors, scales);
+  init(mt, rc, image, main_grid, colors, scales);
 
   QApplication app(argc, argv);
 
@@ -187,6 +185,7 @@ int main(int argc, char *argv[]) {
 
   // Buttons
   auto save_button = new QPushButton("Save");
+  auto random_button = new QPushButton("Randomize");
   auto render_button = new QPushButton("Render");
 
   // Image
@@ -203,6 +202,7 @@ int main(int argc, char *argv[]) {
 
   config_layout->addWidget(scales_config);
   config_layout->addWidget(render_config);
+  config_layout->addWidget(random_button);
   config_layout->addWidget(render_button);
   config_layout->addWidget(save_button);
 
@@ -212,14 +212,38 @@ int main(int argc, char *argv[]) {
   window->setLayout(main_layout);
 
   // Connect
+  window->connect(random_button, &QPushButton::pressed, [&]{
+      std::uniform_real_distribution<double> sa_dist(0.01, 0.1);
+      std::uniform_real_distribution<double> color_dist(0, 255);
+
+      scalesConfig = {
+          ScaleConfig(100, 200, sa_dist(mt), QColor(static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)))),
+          ScaleConfig(20, 40, sa_dist(mt), QColor(static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)))),
+          ScaleConfig(10, 20, sa_dist(mt), QColor(static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)))),
+          ScaleConfig(5, 10, sa_dist(mt), QColor(static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)))),
+          ScaleConfig(1, 2, sa_dist(mt), QColor(static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)), static_cast<int>(color_dist(mt)))),
+      };
+
+      scales_config->setConfig(scalesConfig);
+  });
+
   window->connect(render_button, &QPushButton::pressed, [&]{
-      init(rc, image, main_grid, colors, scales);
-      generate(rc, main_grid, colors, scales_config->getConfig(), scales, image);
+      init(mt, render_config->getConfig(), image, main_grid, colors, scales);
+      generate(render_config->getConfig(), main_grid, colors, scales_config->getConfig(), scales, image);
       image_zone->setPixmap(QPixmap::fromImage(image.scaled(std::min(rc.width, 1000), std::min(rc.height, 1000), Qt::KeepAspectRatio)));
   });
 
   window->connect(save_button, &QPushButton::pressed, [&window, &image]{
       QString file = QFileDialog::getSaveFileName(window, "Save image", ".", "PNG file (*.png)");
+
+      if(file.isEmpty()){
+        return;
+      }
+
+      if(!file.endsWith(".png")) {
+        file.append(".png");
+      }
+
       image.save(file, "png");
   });
 

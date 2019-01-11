@@ -17,9 +17,8 @@ class ScaleConfigWidget : public QWidget
 {
 Q_OBJECT
 public:
-    ScaleConfig *m_scale;
     explicit ScaleConfigWidget(ScaleConfig &scale);
-    void setConfig(ScaleConfig config);
+    void setConfig(ScaleConfig &config);
     ScaleConfig getConfig();
 private:
     QColor m_color;

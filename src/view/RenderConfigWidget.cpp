@@ -8,7 +8,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include "RenderConfigWidget.h"
 
-RenderConfigWidget::RenderConfigWidget(RenderConfig &rc): m_rc(&rc) {
+RenderConfigWidget::RenderConfigWidget(RenderConfig &rc) {
   auto renderconfig_layout = new QVBoxLayout;
 
   m_width_input = new QSpinBox;
@@ -21,7 +21,7 @@ RenderConfigWidget::RenderConfigWidget(RenderConfig &rc): m_rc(&rc) {
 
   m_pass_input = new QSpinBox;
   m_pass_input->setMaximum(1000);
-  m_pass_input->setValue(1);
+  m_pass_input->setValue(rc.passes);
 
   auto size_label = new QLabel("Size:");
   auto pass_label = new QLabel("Passes:");
@@ -39,15 +39,19 @@ RenderConfigWidget::RenderConfigWidget(RenderConfig &rc): m_rc(&rc) {
   renderconfig_layout->addLayout(size_layout);
 
   setLayout(renderconfig_layout);
-
-  // Connect
-  connect(m_pass_input, qOverload<int>(&QSpinBox::valueChanged), [this]{
-      m_rc->passes = m_pass_input->value();
-  });
-  connect(m_width_input, qOverload<int>(&QSpinBox::valueChanged), [this]{
-      m_rc->width = m_width_input->value();
-  });
-  connect(m_height_input, qOverload<int>(&QSpinBox::valueChanged), [this]{
-      m_rc->height = m_height_input->value();
-  });
 }
+
+void RenderConfigWidget::setConfig(RenderConfig &rc) {
+  m_pass_input->setValue(rc.passes);
+  m_width_input->setValue(rc.width);
+  m_height_input->setValue(rc.height);
+}
+
+RenderConfig RenderConfigWidget::getConfig() {
+  return RenderConfig(
+      m_pass_input->value(),
+      m_width_input->value(),
+      m_height_input->value()
+  );
+}
+

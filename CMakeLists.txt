@@ -20,7 +20,9 @@ set(SOURCE_FILES
         src/Scale.h
         src/RenderConfig.h
         src/view/RenderConfigWidget.cpp
-        src/view/RenderConfigWidget.h src/view/ScalesConfig.cpp src/view/ScalesConfig.h)
+        src/view/RenderConfigWidget.h src/view/ScalesConfig.cpp src/view/ScalesConfig.h
+        #src/Renderer.cpp src/Renderer.h
+        )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${RESOURCE_FILES})
 

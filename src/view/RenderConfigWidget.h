@@ -14,8 +14,9 @@ class RenderConfigWidget : public QWidget
 {
     Q_OBJECT
 public:
-    RenderConfig *m_rc;
     explicit RenderConfigWidget(RenderConfig &scale);
+    void setConfig(RenderConfig &rc);
+    RenderConfig getConfig();
 private:
     QSpinBox* m_width_input;
     QSpinBox* m_height_input;

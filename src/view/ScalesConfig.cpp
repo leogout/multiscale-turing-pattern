@@ -19,7 +19,7 @@ ScalesConfig::ScalesConfig(std::vector<ScaleConfig> &scalesConfig) {
   setLayout(config_layout);
 }
 
-void ScalesConfig::setConfig(std::vector<ScaleConfig> scalesConfig) {
+void ScalesConfig::setConfig(std::vector<ScaleConfig> &scalesConfig) {
   for (int i = 0; i < scalesConfig.size(); ++i) {
     m_scales_config[i]->setConfig(scalesConfig[i]);
   }
